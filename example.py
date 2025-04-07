@@ -7,7 +7,15 @@ from rich.theme import Theme
 import json
 from dotenv import load_dotenv
 
-from stagehand import Stagehand, StagehandConfig, configure_logging
+from stagehand import Stagehand, StagehandConfig
+from stagehand.utils import configure_logging
+
+# Configure logging with cleaner format
+configure_logging(
+    level=logging.INFO,
+    remove_logger_name=True,  # Remove the redundant stagehand.client prefix
+    quiet_dependencies=True,   # Suppress httpx and other noisy logs
+)
 
 # Create a custom theme for consistent styling
 custom_theme = Theme(
@@ -26,21 +34,10 @@ console = Console(theme=custom_theme)
 
 load_dotenv()
 
-# Configure logging with the utility function
-configure_logging(
-    level=logging.DEBUG,  # Set to DEBUG to see all logs, including verbosity level 3
-)
-
-# Set higher log levels for noisy libraries
-logging.getLogger("httpx").setLevel(logging.WARNING)
-logging.getLogger("httpcore").setLevel(logging.WARNING)
-logging.getLogger("asyncio").setLevel(logging.WARNING)
-# Set stagehand.utils to WARNING level
-logging.getLogger("stagehand.utils").setLevel(logging.WARNING)
-
 console.print(
     Panel.fit(
         "[yellow]Logging Levels:[/]\n"
+        "[white]- Set [bold]verbose=0[/] for errors (ERROR)[/]\n"
         "[white]- Set [bold]verbose=1[/] for minimal logs (INFO)[/]\n"
         "[white]- Set [bold]verbose=2[/] for medium logs (WARNING)[/]\n"
         "[white]- Set [bold]verbose=3[/] for detailed logs (DEBUG)[/]",
@@ -60,16 +57,15 @@ async def main():
         model_name="gpt-4o",
         self_heal=True,
         wait_for_captcha_solves=True,
-        act_timeout_ms=60000,  # 60 seconds timeout for actions
         system_prompt="You are a browser automation assistant that helps users navigate websites effectively.",
         model_client_options={"apiKey": os.getenv("MODEL_API_KEY")},
+        # Use verbose=2 for medium-detail logs (1=minimal, 3=debug)
+        verbose=2,
     )
 
-    # Create a Stagehand client using the configuration object.
-    # Change verbose level (1-3) to control log verbosity:
-    # 1 = minimal logs, 2 = medium logs, 3 = detailed logs
     stagehand = Stagehand(
-        config=config, server_url=os.getenv("STAGEHAND_SERVER_URL"), verbose=3
+        config=config, 
+        server_url=os.getenv("STAGEHAND_SERVER_URL"),
     )
 
     # Initialize - this creates a new session automatically.
@@ -101,6 +97,8 @@ async def main():
     await page.act("search for openai")
     await page.keyboard.press("Enter")
     console.print("✅ [success]Performing Action:[/] Action completed successfully")
+    
+    await asyncio.sleep(2)
 
     console.print("\n▶️ [highlight] Observing page[/] for news button")
     observed = await page.observe("find the news button on the page")
@@ -120,7 +118,7 @@ async def main():
     console.print_json(f"{data.model_dump_json()}")
 
     # Close the session
-    console.print("\n⏹️ [warning]Closing session...[/]")
+    console.print("\n⏹️  [warning]Closing session...[/]")
     await stagehand.close()
     console.print("✅ [success]Session closed successfully![/]")
     console.rule("[bold]End of Example[/]")

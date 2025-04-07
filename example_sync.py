@@ -6,7 +6,8 @@ from rich.theme import Theme
 import json
 from dotenv import load_dotenv
 
-from stagehand.sync import Stagehand, StagehandConfig
+from stagehand.sync import Stagehand
+from stagehand import StagehandConfig
 from stagehand import configure_logging
 
 # Create a custom theme for consistent styling
@@ -28,19 +29,15 @@ load_dotenv()
 
 # Configure logging with the utility function
 configure_logging(
-    level=logging.DEBUG,  # Set to DEBUG to see all logs, including verbosity level 3
+    level=logging.INFO,  # Set to INFO for regular logs, DEBUG for detailed logs
+    use_rich=True,       # Use Rich for colorized output
+    quiet_dependencies=True, # Reduce noise from dependencies
 )
-
-# Set higher log levels for noisy libraries
-logging.getLogger("httpx").setLevel(logging.WARNING)
-logging.getLogger("httpcore").setLevel(logging.WARNING)
-logging.getLogger("asyncio").setLevel(logging.WARNING)
-# Set stagehand.utils to WARNING level
-logging.getLogger("stagehand.utils").setLevel(logging.WARNING)
 
 console.print(
     Panel.fit(
         "[yellow]Logging Levels:[/]\n"
+        "[white]- Set [bold]verbose=0[/] for errors only (ERROR)[/]\n"
         "[white]- Set [bold]verbose=1[/] for minimal logs (INFO)[/]\n"
         "[white]- Set [bold]verbose=2[/] for medium logs (WARNING)[/]\n"
         "[white]- Set [bold]verbose=3[/] for detailed logs (DEBUG)[/]",
@@ -60,16 +57,15 @@ def main():
         model_name="gpt-4o",
         self_heal=True,
         wait_for_captcha_solves=True,
-        act_timeout_ms=60000,  # 60 seconds timeout for actions
         system_prompt="You are a browser automation assistant that helps users navigate websites effectively.",
         model_client_options={"apiKey": os.getenv("MODEL_API_KEY")},
+        verbose=2,
     )
 
     # Create a Stagehand client using the configuration object.
-    # Change verbose level (1-3) to control log verbosity:
-    # 1 = minimal logs, 2 = medium logs, 3 = detailed logs
     stagehand = Stagehand(
-        config=config, server_url=os.getenv("STAGEHAND_SERVER_URL"), verbose=3
+        config=config, 
+        server_url=os.getenv("STAGEHAND_SERVER_URL"),
     )
 
     # Initialize - this creates a new session automatically.
@@ -118,7 +114,7 @@ def main():
     console.print_json(f"{data.model_dump_json()}")
 
     # Close the session
-    console.print("\n⏹️ [warning]Closing session...[/]")
+    console.print("\n⏹️  [warning]Closing session...[/]")
     stagehand.close()
     console.print("✅ [success]Session closed successfully![/]")
     console.rule("[bold]End of Example[/]")
