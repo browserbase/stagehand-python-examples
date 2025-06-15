@@ -57,7 +57,7 @@ async def main():
     # Initialize async client
     stagehand = Stagehand(
         config=config,
-        env="LOCAL", # LOCAL for local execution, BROWSERBASE for remote execution
+        env="BROWSERBASE", # LOCAL for local execution, BROWSERBASE for remote execution
         server_url=os.getenv("STAGEHAND_SERVER_URL"), # only needed for remote execution
     )
     
