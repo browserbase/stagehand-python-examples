@@ -71,7 +71,7 @@ async def main():
     # Create a Stagehand client using the configuration object.
     stagehand = Stagehand(
         config=config, 
-        server_url=os.getenv("STAGEHAND_SERVER_URL"),
+        server_url=os.getenv("STAGEHAND_API_URL"),
     )
 
     # Initialize - this creates a new session automatically.
@@ -82,19 +82,10 @@ async def main():
         f"🌐 [white]View your live browser:[/] [url]https://www.browserbase.com/sessions/{stagehand.session_id}[/]"
     )
     
-    # Configure the agent
-    agent_config = AgentConfig(
-        provider=AgentProvider.OPENAI,
+    agent = stagehand.agent(
         model="computer-use-preview",
         instructions="You are a helpful web navigation assistant that helps users find information. You are currently on the following page: google.com. Do not ask follow up questions, the user will trust your judgement.",
         options={"apiKey": os.getenv("MODEL_API_KEY")}
-    )
-    
-    # Define the task for the agent
-    execute_options = AgentExecuteOptions(
-        instruction="Play a game of 2048",
-        max_steps=20,
-        auto_screenshot=True,
     )
 
     console.print("\n▶️ [highlight] Navigating[/] to Google")
@@ -102,8 +93,12 @@ async def main():
     console.print("✅ [success]Navigated to Google[/]")
     
     console.print("\n▶️ [highlight] Using Agent to perform a task[/]: playing a game of 2048")
-    agent_result = await stagehand.agent.execute(agent_config, execute_options)
-    
+    agent_result = await agent.execute(
+        instruction="Play a game of 2048",
+        max_steps=20,
+        auto_screenshot=True,
+    )
+
     console.print("📊 [info]Agent execution result:[/]")
     console.print(f"✅ Success: [bold]{'Yes' if agent_result.success else 'No'}[/]")
     console.print(f"🎯 Completed: [bold]{'Yes' if agent_result.completed else 'No'}[/]")
@@ -131,7 +126,7 @@ if __name__ == "__main__":
     console.print(
         "\n",
         Panel.fit(
-            "[light_gray]Stagehand 🤘 Async Agent Example[/]",
+            "[light_gray]Stagehand 🤘 Agent Example[/]",
             border_style="green",
             padding=(1, 10),
         ),

@@ -58,7 +58,7 @@ async def main():
     stagehand = Stagehand(
         config=config,
         env="BROWSERBASE", # LOCAL for local execution, BROWSERBASE for remote execution
-        server_url=os.getenv("STAGEHAND_SERVER_URL"), # only needed for remote execution
+        server_url=os.getenv("STAGEHAND_API_URL"), # only needed for remote execution
     )
     
     try:

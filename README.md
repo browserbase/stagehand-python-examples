@@ -1,10 +1,11 @@
 # Examples for Stagehand Python
 
+This repo contains select examples of how to use the Stagehand Python SDK.
 
-# Installation
+## Installation
 
 `pip install stagehand`
 
-# Documentation
+## Documentation
 
 Visit `https://docs.stagehand.dev/`
