@@ -6,10 +6,9 @@ from rich.panel import Panel
 from rich.theme import Theme
 from pydantic import BaseModel, Field, HttpUrl
 from dotenv import load_dotenv
-import time
 
 from stagehand import StagehandConfig, Stagehand, configure_logging
-from stagehand.schemas import ObserveOptions, ActOptions, ExtractOptions
+from stagehand.schemas import ExtractOptions
 from stagehand.a11y.utils import get_accessibility_tree, get_xpath_by_resolved_object_id
 
 # Load environment variables
@@ -58,7 +57,7 @@ async def main():
     # Initialize async client
     stagehand = Stagehand(
         config=config,
-        env="BROWSERBASE", # LOCAL for local execution, BROWSERBASE for remote execution
+        env="LOCAL", # LOCAL for local execution, BROWSERBASE for remote execution
         server_url=os.getenv("STAGEHAND_SERVER_URL"), # only needed for remote execution
     )
     
@@ -170,7 +169,7 @@ async def main():
                         ]
                     }
                 ],
-                model=model_name,
+                model=config.model_name,
                 response_format=ElementAction,
             )
             
