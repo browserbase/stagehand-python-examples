@@ -9,6 +9,7 @@ from rich.theme import Theme
 
 from stagehand import Stagehand, StagehandConfig, AgentConfig, configure_logging
 from stagehand.schemas import AgentExecuteOptions, AgentProvider
+from browserbase.types import SessionCreateParams as BrowserbaseSessionCreateParams
 
 # Create a custom theme for consistent styling
 custom_theme = Theme(
@@ -33,6 +34,11 @@ configure_logging(
     quiet_dependencies=True,  # Reduce noise from dependencies
 )
 
+browserbase_session_create_params = BrowserbaseSessionCreateParams(
+    project_id=os.getenv("BROWSERBASE_PROJECT_ID"),
+    proxies=True,
+)
+
 console.print(
     Panel.fit(
         "[yellow]Logging Levels:[/]\n"
@@ -51,6 +57,7 @@ async def main():
         env="BROWSERBASE",
         api_key=os.getenv("BROWSERBASE_API_KEY"),
         project_id=os.getenv("BROWSERBASE_PROJECT_ID"),
+        browserbase_session_create_params=browserbase_session_create_params,
         headless=False,
         dom_settle_timeout_ms=3000,
         model_name="gpt-4o",
