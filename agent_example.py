@@ -9,6 +9,7 @@ from rich.theme import Theme
 
 from stagehand import Stagehand, StagehandConfig, AgentConfig, configure_logging
 from stagehand.schemas import AgentExecuteOptions, AgentProvider
+
 from browserbase.types import SessionCreateParams as BrowserbaseSessionCreateParams
 
 # Create a custom theme for consistent styling
@@ -28,73 +29,56 @@ console = Console(theme=custom_theme)
 
 load_dotenv()
 
+browserbase_session_create_params = BrowserbaseSessionCreateParams(
+    project_id=os.getenv("BROWSERBASE_PROJECT_ID"),
+    proxies=True,
+)
+
 # Configure logging with the utility function
 configure_logging(
     level=logging.INFO,  # Set to INFO for regular logs, DEBUG for detailed
     quiet_dependencies=True,  # Reduce noise from dependencies
 )
 
-browserbase_session_create_params = BrowserbaseSessionCreateParams(
-    project_id=os.getenv("BROWSERBASE_PROJECT_ID"),
-    proxies=True,
-)
-
-console.print(
-    Panel.fit(
-        "[yellow]Logging Levels:[/]\n"
-        "[white]- Set [bold]verbose=0[/] for errors (ERROR)[/]\n"
-        "[white]- Set [bold]verbose=1[/] for minimal logs (INFO)[/]\n"
-        "[white]- Set [bold]verbose=2[/] for medium logs (WARNING)[/]\n"
-        "[white]- Set [bold]verbose=3[/] for detailed logs (DEBUG)[/]",
-        title="Verbosity Options",
-        border_style="blue",
-    )
-)
-
 async def main():
     # Build a unified configuration object for Stagehand
     config = StagehandConfig(
         env="BROWSERBASE",
+        # env="LOCAL",
         api_key=os.getenv("BROWSERBASE_API_KEY"),
         project_id=os.getenv("BROWSERBASE_PROJECT_ID"),
         browserbase_session_create_params=browserbase_session_create_params,
-        headless=False,
-        dom_settle_timeout_ms=3000,
         model_name="gpt-4o",
         self_heal=True,
-        wait_for_captcha_solves=True,
         system_prompt="You are a browser automation assistant that helps users navigate websites effectively.",
         model_client_options={"apiKey": os.getenv("MODEL_API_KEY")},
-        verbose=2,
+        verbose=1,
     )
 
     # Create a Stagehand client using the configuration object.
-    stagehand = Stagehand(
-        config=config, 
-        server_url=os.getenv("STAGEHAND_API_URL"),
-    )
+    stagehand = Stagehand(config)
 
     # Initialize - this creates a new session automatically.
     console.print("\n🚀 [info]Initializing Stagehand...[/]")
     await stagehand.init()
-    console.print(f"\n[yellow]Created new session:[/] {stagehand.session_id}")
-    console.print(
-        f"🌐 [white]View your live browser:[/] [url]https://www.browserbase.com/sessions/{stagehand.session_id}[/]"
-    )
-    
-    agent = stagehand.agent(
-        model="computer-use-preview",
-        instructions="You are a helpful web navigation assistant that helps users find information. You are currently on the following page: google.com. Do not ask follow up questions, the user will trust your judgement.",
-        options={"apiKey": os.getenv("MODEL_API_KEY")}
-    )
+    if stagehand.env == "BROWSERBASE":    
+        console.print(f"\n[yellow]Created new session:[/] {stagehand.session_id}")
+        console.print(
+            f"🌐 [white]View your live browser:[/] [url]https://www.browserbase.com/sessions/{stagehand.session_id}[/]"
+        )
 
     console.print("\n▶️ [highlight] Navigating[/] to Google")
     await stagehand.page.goto("https://google.com/")
     console.print("✅ [success]Navigated to Google[/]")
     
     console.print("\n▶️ [highlight] Using Agent to perform a task[/]: playing a game of 2048")
+    agent = stagehand.agent(
+        model="computer-use-preview",
+        instructions="You are a helpful web navigation assistant that helps users find information. You are currently on the following page: google.com. Do not ask follow up questions, the user will trust your judgement.",
+        options={"apiKey": os.getenv("MODEL_API_KEY")}
+    )
     agent_result = await agent.execute(
-        instruction="Search for a game of 2048 and play it for a few moves",
+        instruction="Search for the game 2048 and play one game.",
         max_steps=20,
         auto_screenshot=True,
     )
