@@ -94,7 +94,7 @@ async def main():
     
     console.print("\n▶️ [highlight] Using Agent to perform a task[/]: playing a game of 2048")
     agent_result = await agent.execute(
-        instruction="Play a game of 2048",
+        instruction="Search for a game of 2048 and play it for a few moves",
         max_steps=20,
         auto_screenshot=True,
     )
